@@ -68,6 +68,7 @@ public class IMUSensorCriteria implements SensorCriteria {
     private double tilt;
     Orientation angles;
     Acceleration gravity;
+    private int overTiltCntr = 0;
 
     public IMUSensorCriteria(BNO055IMU imu, double maxTilt) {
         this.maxTilt = maxTilt;
@@ -105,12 +106,19 @@ public class IMUSensorCriteria implements SensorCriteria {
 
     @Override
     public boolean satisfied() {
+        boolean overtilt = false;
+
         tilt = getTilt();
-        RobotLog.i("Title: %.2f", tilt);
-        if(tilt >= maxTilt) {
-            return true;
-        } else {
-            return false;
+
+        RobotLog.i("506 Tilt: %.2f", tilt);
+
+        if (tilt >= maxTilt) {
+            RobotLog.i("506 Max tilt is " + maxTilt);
+            overTiltCntr++;
+            if (overTiltCntr > 3) {
+                overtilt = true;
+            }
         }
+        return(overtilt);
     }
 }

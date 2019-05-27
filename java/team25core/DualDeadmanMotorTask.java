@@ -34,9 +34,8 @@
 package team25core;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.Gamepad;
 
-public class DeadmanMotorTask extends RobotTask {
+public class DualDeadmanMotorTask extends RobotTask {
 
     public enum DeadmanButton {
         BUTTON_A,
@@ -67,13 +66,15 @@ public class DeadmanMotorTask extends RobotTask {
     DcMotor motor;
     double power;
     DeadmanButton button;
+    DeadmanButton reverseButton;
     boolean done;
     boolean buttonDown;
     HoldPositionTask holdPositionTask;
     boolean useHoldMotorPositionTask=false;
 
     ///Creates a DeadmanMotorTask without HoldMotorPositionTask
-    public DeadmanMotorTask(Robot robot, DcMotor motor, double power, GamepadTask.GamepadNumber gamepad, DeadmanButton button)
+    public DualDeadmanMotorTask(Robot robot, DcMotor motor, double power, GamepadTask.GamepadNumber gamepad,
+                                DeadmanButton button, DeadmanButton reverseButton)
     {
         super(robot);
 
@@ -82,13 +83,15 @@ public class DeadmanMotorTask extends RobotTask {
         this.motor = motor;
         this.gamepad = gamepad;
         this.button = button;
+        this.reverseButton = reverseButton;
         this.power = power;
         done = false;
     }
 
     ///Creates a DeadmanMotorTask with option for HoldMotorPositionTask
 
-    public DeadmanMotorTask(Robot robot, DcMotor motor, double power, GamepadTask.GamepadNumber gamepad, DeadmanButton button, boolean useHoldMotorPositionTask)
+    public DualDeadmanMotorTask(Robot robot, DcMotor motor, double power, GamepadTask.GamepadNumber gamepad,
+                                DeadmanButton button, DeadmanButton reverseButton, boolean useHoldMotorPositionTask)
     {
         super(robot);
 
@@ -97,6 +100,7 @@ public class DeadmanMotorTask extends RobotTask {
         this.motor = motor;
         this.gamepad = gamepad;
         this.button = button;
+        this.reverseButton = reverseButton;
         this.power = power;
         done = false;
     }
@@ -128,38 +132,65 @@ public class DeadmanMotorTask extends RobotTask {
         return ret;
     }
 
-    protected void toggleMotor(GamepadTask.EventKind kind)
+
+    protected boolean isReverseButtonTracked(GamepadTask.EventKind kind)
+    {
+        boolean ret;
+
+        ret = false;
+
+        if (((kind == GamepadTask.EventKind.BUTTON_A_DOWN) || (kind == GamepadTask.EventKind.BUTTON_A_UP)) && (reverseButton == DeadmanButton.BUTTON_A)) {
+            ret = true;
+        } else if (((kind == GamepadTask.EventKind.BUTTON_B_DOWN) || (kind == GamepadTask.EventKind.BUTTON_B_UP)) && (reverseButton == DeadmanButton.BUTTON_B)) {
+            ret = true;
+        } else if (((kind == GamepadTask.EventKind.BUTTON_X_DOWN) || (kind == GamepadTask.EventKind.BUTTON_X_UP)) && (reverseButton == DeadmanButton.BUTTON_X)) {
+            ret = true;
+        } else if (((kind == GamepadTask.EventKind.BUTTON_Y_DOWN) || (kind == GamepadTask.EventKind.BUTTON_Y_UP)) && (reverseButton == DeadmanButton.BUTTON_Y)) {
+            ret = true;
+        } else if (((kind == GamepadTask.EventKind.LEFT_BUMPER_DOWN) || (kind == GamepadTask.EventKind.LEFT_BUMPER_UP)) && (reverseButton == DeadmanButton.LEFT_BUMPER)) {
+            ret = true;
+        } else if (((kind == GamepadTask.EventKind.RIGHT_BUMPER_DOWN) || (kind == GamepadTask.EventKind.RIGHT_BUMPER_UP)) && (reverseButton == DeadmanButton.RIGHT_BUMPER)) {
+            ret = true;
+        } else if (((kind == GamepadTask.EventKind.LEFT_TRIGGER_DOWN) || (kind == GamepadTask.EventKind.LEFT_TRIGGER_UP)) && (reverseButton == DeadmanButton.LEFT_TRIGGER)) {
+            ret = true;
+        } else if (((kind == GamepadTask.EventKind.RIGHT_TRIGGER_DOWN) || (kind == GamepadTask.EventKind.RIGHT_TRIGGER_UP)) && (reverseButton == DeadmanButton.RIGHT_TRIGGER)) {
+            ret = true;
+        }
+        return ret;
+    }
+
+    protected void toggleMotor(GamepadTask.EventKind kind, double p)
     {
         switch (kind) {
-        case BUTTON_A_DOWN:
-        case BUTTON_B_DOWN:
-        case BUTTON_X_DOWN:
-        case BUTTON_Y_DOWN:
-        case LEFT_BUMPER_DOWN:
-        case RIGHT_BUMPER_DOWN:
-        case LEFT_TRIGGER_DOWN:
-        case RIGHT_TRIGGER_DOWN:
-            motor.setPower(power);
-            robot.queueEvent(new DeadmanMotorEvent(this, EventKind.DEADMAN_BUTTON_DOWN));
-            if (useHoldMotorPositionTask) {
-                robot.removeTask(holdPositionTask);
-            }
-            break;
+            case BUTTON_A_DOWN:
+            case BUTTON_B_DOWN:
+            case BUTTON_X_DOWN:
+            case BUTTON_Y_DOWN:
+            case LEFT_BUMPER_DOWN:
+            case RIGHT_BUMPER_DOWN:
+            case LEFT_TRIGGER_DOWN:
+            case RIGHT_TRIGGER_DOWN:
+                motor.setPower(p);
+                robot.queueEvent(new DeadmanMotorEvent(this, EventKind.DEADMAN_BUTTON_DOWN));
+                if (useHoldMotorPositionTask) {
+                    robot.removeTask(holdPositionTask);
+                }
+                break;
 
-        case BUTTON_A_UP:
-        case BUTTON_B_UP:
-        case BUTTON_X_UP:
-        case BUTTON_Y_UP:
-        case LEFT_BUMPER_UP:
-        case RIGHT_BUMPER_UP:
-        case LEFT_TRIGGER_UP:
-        case RIGHT_TRIGGER_UP:
-            motor.setPower(0.0);
-            robot.queueEvent(new DeadmanMotorEvent(this, EventKind.DEADMAN_BUTTON_UP));
-            if (useHoldMotorPositionTask) {
-                robot.addTask(holdPositionTask);
-            }
-            break;
+            case BUTTON_A_UP:
+            case BUTTON_B_UP:
+            case BUTTON_X_UP:
+            case BUTTON_Y_UP:
+            case LEFT_BUMPER_UP:
+            case RIGHT_BUMPER_UP:
+            case LEFT_TRIGGER_UP:
+            case RIGHT_TRIGGER_UP:
+                motor.setPower(0.0);
+                robot.queueEvent(new DeadmanMotorEvent(this, EventKind.DEADMAN_BUTTON_UP));
+                if (useHoldMotorPositionTask) {
+                    robot.addTask(holdPositionTask);
+                }
+                break;
         }
     }
 
@@ -175,7 +206,9 @@ public class DeadmanMotorTask extends RobotTask {
                 GamepadEvent event = (GamepadEvent)e;
 
                 if (isButtonTracked(event.kind)) {
-                    toggleMotor(event.kind);
+                    toggleMotor(event.kind, power);
+                } else if (isReverseButtonTracked(event.kind)) {
+                    toggleMotor(event.kind, -power);
                 }
 
             }
@@ -191,8 +224,6 @@ public class DeadmanMotorTask extends RobotTask {
 
     @Override
     public boolean timeslice() {
-       return done;
+        return done;
     }
-
-
 }

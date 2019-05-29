@@ -175,12 +175,15 @@ public class TwoWheelDirectDrivetrain extends DrivetrainBaseImpl implements Driv
     @Override
     public void setPowerLeft(double speed)
     {
-
+        RobotLog.i("coda:setPowerLeft %s", Double.toString(speed) );
+        frontLeft.setPower(speed);
     }
 
     @Override
     public void setPowerRight(double speed)
     {
+        RobotLog.i("coda:setPowerRight %s", Double.toString(speed) );
+        frontRight.setPower(speed);
 
     }
 

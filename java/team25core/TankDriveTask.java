@@ -36,11 +36,17 @@ package team25core;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Gamepad;
+import com.qualcomm.robotcore.util.RobotLog;
 
 public class TankDriveTask extends RobotTask {
 
     protected Robot robot;
     protected Drivetrain drivetrain;
+    protected SensorCriteria goCriteria;
+    protected SensorCriteria stopCriteria;
+
+    boolean allowedToMove = true;
+    boolean usingCriteria = false;
 
     public double right;
     public double left;
@@ -52,6 +58,17 @@ public class TankDriveTask extends RobotTask {
 
         this.robot = robot;
         this.drivetrain = drivetrain;
+    }
+    public TankDriveTask(Robot robot, Drivetrain drivetrain,
+                         SensorCriteria goCriteria, SensorCriteria stopCriteria)
+    {
+        super(robot);
+
+        this.robot = robot;
+        this.drivetrain = drivetrain;
+        this.goCriteria = goCriteria;
+        this.stopCriteria = stopCriteria;
+        this.usingCriteria = true;
     }
 
     private void getJoystick()
@@ -92,8 +109,25 @@ public class TankDriveTask extends RobotTask {
     {
         getJoystick();
 
-        drivetrain.setPowerLeft(left);
-        drivetrain.setPowerRight(right);
+        // if sensor criteria is satisfied, then stop
+        if (usingCriteria) {
+           if (stopCriteria.satisfied()) {
+             allowedToMove = false;
+           } else if (goCriteria.satisfied()) {
+             allowedToMove = true;
+           }
+
+        }
+
+        if (allowedToMove) {
+            RobotLog.i("coda: TankDriveTask allowed to move");
+            drivetrain.setPowerLeft(left);
+            drivetrain.setPowerRight(right);
+        } else {
+            RobotLog.i("coda: TankDriveTask NOT allowed to move");
+            drivetrain.setPowerLeft(0);
+            drivetrain.setPowerRight(0);
+        }
         return false;
     }
 
